@@ -2,15 +2,34 @@
 
 #include <fstream>
 
-ResourceManager::ResourceManager(const std::string& basePath)
-	: m_basePath(basePath)
+std::string ResourceManager::m_basePath;
+
+void ResourceManager::InitializeEnvironment(const std::string& executablePath)
 {
+	const auto index = executablePath.find_last_of("/\\");
+	assert(index != std::string::npos);
+
+	// Windows?
+	m_basePath = executablePath.substr(0, index) + "/res/";
 	assert(m_basePath.empty() == false);
 }
 
-std::string ResourceManager::GetFileContent(const char* path)
+ResourceManager::ResourceManager(const std::string& root)
 {
-	std::ifstream stream(path);
+	setRoot(root);
+}
+
+void ResourceManager::setRoot(const std::string& root)
+{
+	assert(m_basePath.empty() == false);
+	m_root = m_basePath + root + "/";
+}
+
+std::string ResourceManager::getFileContent(const char* file)
+{
+	std::ifstream stream(m_root + file);
+	assert(stream.is_open());
+
 	std::string buffer;
 	std::string line;
 
@@ -24,7 +43,7 @@ std::string ResourceManager::GetFileContent(const char* path)
 	return buffer;
 }
 
-std::string ResourceManager::GetFileContent(const std::string& path)
+std::string ResourceManager::getFileContent(const std::string& file)
 {
-	return GetFileContent(path.c_str());
+	return getFileContent(file.c_str());
 }

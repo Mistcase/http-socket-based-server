@@ -2,15 +2,19 @@ cmake_minimum_required(VERSION 3.20.3 FATAL_ERROR)
 
 project(WebServer)
 
-set(CMAKE_CXX_STANDART 14)
-set(CMAKE_CXX_STANDART_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(EXECUTABLE_NAME exec)
 add_executable(${EXECUTABLE_NAME}
     src/main.cpp
     src/ResourceManager.h
-    src/ResourceManager.cpp)
+    src/ResourceManager.cpp
+    src/HttpServer.h
+    src/HttpServer.cpp
+    src/TcpSocket.h
+    src/TcpSocket.cpp)
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/)
 
