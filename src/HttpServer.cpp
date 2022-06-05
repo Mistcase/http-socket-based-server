@@ -1,29 +1,35 @@
 #include "HttpServer.h"
 
 #include "ResourceManager.h"
+#include <nlohmann/json.hpp>
 #include <sstream>
+
+#include <iostream>
 
 HttpServer::HttpServer(const std::string& config, const std::string contentPackage)
 {
 	// Read config
 	const auto configData = m_res.getFileContent(config);
-	// ...
-	// ...
-	// ...
-	// ...
+	const auto json = nlohmann::json::parse(configData);
 
-	// Set up manager to content package
+	if (json.is_object() == false)
+	{
+		assert(!"Json is not valid");
+		return;
+	}
+
+	const auto address = json["address"].get<std::string>();
+	const auto port = json["port"].get<uint16_t>();
+	if (m_listeningSocket.bind(address, port) == false)
+	{
+		assert(!"Cannot bind socket");
+	}
+
 	m_res.setRoot(contentPackage);
 }
 
 bool HttpServer::start()
 {
-	if (m_listeningSocket.bind("127.0.0.1", 8080) == false)
-	{
-		assert(!"Cannot bind socket");
-		return false;
-	}
-
 	if (m_listeningSocket.listen() == false)
 	{
 		assert(!"Cannot start listening");
@@ -49,6 +55,9 @@ void HttpServer::stop()
 
 void HttpServer::handleRequest(TcpSocket& socket)
 {
+	// Identify requested source
+
+
 	const std::string response_body = m_res.getFileContent("index.html");
 
 	std::stringstream response;
