@@ -5,16 +5,20 @@
 class ResourceManager final
 {
 public:
-	ResourceManager(const std::string& basePath);
+	static void InitializeEnvironment(const std::string& executablePath);
+	ResourceManager(const std::string& root = "");
 
 	ResourceManager(const ResourceManager&) = delete;
 	ResourceManager(const ResourceManager&&) = delete;
 	ResourceManager& operator=(const ResourceManager&) = delete;
 	ResourceManager& operator=(const ResourceManager&&) = delete;
 
-	std::string GetFileContent(const char* path);
-	std::string GetFileContent(const std::string& path);
+	void setRoot(const std::string& root);
+
+	std::string getFileContent(const char* file);
+	std::string getFileContent(const std::string& file);
 
 private:
-	const std::string m_basePath;
+	static std::string m_basePath;
+	std::string m_root;
 };
