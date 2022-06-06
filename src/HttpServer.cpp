@@ -30,7 +30,38 @@ namespace
 	}
 
 	static_assert(helpers::GetArraySize(RequestTypeMappings) == static_cast<size_t>(HttpServer::RequestType::Count));
-}
+
+	namespace resources
+	{
+		const char* DefaultPage = "/";
+
+		std::string GetContentType(const std::string& resource)
+		{
+			if (resource.find(".html") != std::string::npos)
+			{
+				return "text/html";
+			}
+
+			if (resource.find(".css") != std::string::npos)
+			{
+				return "text/css";
+			}
+
+			if (resource.find(".js") != std::string::npos)
+			{
+				return "text/javascript";
+			}
+
+			if (resource.find(".png") != std::string::npos)
+			{
+				return "image/png";
+			}
+
+			return "";
+		}
+	}
+
+} // namespace
 
 HttpServer::HttpServer(const std::string& config, const std::string& contentPackage)
 {
@@ -52,7 +83,7 @@ HttpServer::HttpServer(const std::string& config, const std::string& contentPack
 	}
 
 	m_bufferLength = json["request_buffer_size"].get<size_t>();
-	allocateBuffer(m_bufferLength);
+	allocateBuffer();
 
 	m_res.setRoot(contentPackage);
 }
@@ -65,7 +96,6 @@ bool HttpServer::start()
 		return false;
 	}
 
-	// Move it to separate thread
 	m_isActive = true;
 	while (m_isActive)
 	{
@@ -82,27 +112,54 @@ void HttpServer::stop()
 	m_listeningSocket.close();
 }
 
-void HttpServer::allocateBuffer(size_t length)
+void HttpServer::allocateBuffer()
 {
 	if (m_buffer != nullptr)
 	{
 		delete m_buffer;
 	}
 
-	assert(length > 0);
-	m_buffer = new char[length]{};
+	assert(m_bufferLength > 0);
+	m_buffer = new char[m_bufferLength]{};
 }
 
 template <>
 std::string HttpServer::createResponse<HttpServer::RequestType::Get>(TcpSocket& socket, const std::string& request) const
 {
 	// Find resource
+	const auto& mapping = RequestTypeMappings[static_cast<size_t>(RequestType::Get)];
+	assert(request.find(mapping) == 0);
 
-	const std::string response_body = m_res.getFileContent("index.html");
+	std::string resource;
+	auto isIdentificationStarted = false;
+	for (size_t i = mapping.length(); i < request.length(); i++)
+	{
+		const auto symbol = request[i];
+		if (symbol == ' ')
+		{
+			if (isIdentificationStarted)
+			{
+				break;
+			}
+
+			isIdentificationStarted = true;
+		}
+		else
+		{
+			resource += symbol;
+		}
+	}
+
+	if (resource == resources::DefaultPage)
+	{
+		resource = "index.html";
+	}
+
+	const std::string response_body = m_res.getFileContent(resource);
 	std::stringstream response;
 	response << "HTTP/1.1 200 OK\r\n"
 			 << "Version: HTTP/1.1\r\n"
-			 << "Content-Type: text/html; charset=utf-8\r\n"
+			 << "Content-Type: " << resources::GetContentType(resource) << "; charset=utf-8\r\n"
 			 << "Content-Length: " << response_body.length()
 			 << "\r\n\r\n"
 			 << response_body;
@@ -118,7 +175,6 @@ std::string HttpServer::createResponse<HttpServer::RequestType::Post>(TcpSocket&
 
 void HttpServer::handleNewConnection(TcpSocket& socket)
 {
-	// Identify requested resource
 	while (true) // !!!!!
 	{
 		const auto received = socket.receive(m_buffer + m_offset, m_bufferLength);
@@ -128,7 +184,7 @@ void HttpServer::handleNewConnection(TcpSocket& socket)
 		}
 
 		m_offset += received;
-		std::string_view bufferView{ m_buffer };
+		std::string_view bufferView(m_buffer);
 
 		const auto requestLength = bufferView.find(EndOfHttpRequest);
 		if (requestLength != std::string::npos)
@@ -177,7 +233,11 @@ void HttpServer::handleRequest(TcpSocket& socket, const std::string& request) co
 		break;
 	}
 
-	assert(response.empty() == false);
+	if (response.empty())
+	{
+		socket.shutdown();
+		return;
+	}
 
 	socket.send(response.c_str(), response.length());
 	socket.shutdown();

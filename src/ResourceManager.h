@@ -19,6 +19,12 @@ public:
 	std::string getFileContent(const std::string& file) const;
 
 private:
+	std::string getTextResource(const char* file) const;
+	std::string getBinaryResource(const char* file) const;
+
+	size_t getFileSize(std::ifstream& stream) const;
+
+private:
 	static std::string m_basePath;
 	std::string m_root;
 };
