@@ -14,7 +14,7 @@ namespace
         "POST"
     };
 
-    HttpServer::RequestType GetRequestType(const std::string& request)
+    HttpServer::RequestType GetRequestType(const std::string_view& request)
     {
         for (size_t i = 0; i < static_cast<size_t>(HttpServer::RequestType::Count); i++)
         {
@@ -123,9 +123,8 @@ void HttpServer::allocateBuffer()
 }
 
 template <>
-std::string HttpServer::createResponse<HttpServer::RequestType::Get>(TcpSocket& socket, const std::string& request) const
+std::string HttpServer::createResponse<HttpServer::RequestType::Get>(TcpSocket& socket, const std::string_view& request) const
 {
-    // Find resource
     const auto& mapping = RequestTypeMappings[static_cast<size_t>(RequestType::Get)];
     assert(request.find(mapping) == 0);
 
@@ -167,7 +166,7 @@ std::string HttpServer::createResponse<HttpServer::RequestType::Get>(TcpSocket& 
 }
 
 template <>
-std::string HttpServer::createResponse<HttpServer::RequestType::Post>(TcpSocket& socket, const std::string& request) const
+std::string HttpServer::createResponse<HttpServer::RequestType::Post>(TcpSocket& socket, const std::string_view& request) const
 {
     assert(!"Post request is not supported");
 }
@@ -196,7 +195,7 @@ void HttpServer::handleNewConnection(TcpSocket& socket)
 				return;
 			}
 
-            const std::string request(bufferView.substr(0, requestLength));
+            const auto request(bufferView.substr(0, requestLength));
             const auto endPatternLength = EndOfHttpRequest.length();
             const auto totalRequestLength = requestLength + endPatternLength;
 
@@ -213,7 +212,7 @@ void HttpServer::handleNewConnection(TcpSocket& socket)
     }
 }
 
-void HttpServer::handleRequest(TcpSocket& socket, const std::string& request) const
+void HttpServer::handleRequest(TcpSocket& socket, const std::string_view& request) const
 {
     const auto requestType = GetRequestType(request);
     assert(requestType != RequestType::Count);
@@ -237,6 +236,7 @@ void HttpServer::handleRequest(TcpSocket& socket, const std::string& request) co
     if (response.empty())
     {
         socket.shutdown();
+		socket.close();
         return;
     }
 
