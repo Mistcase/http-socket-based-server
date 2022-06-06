@@ -7,35 +7,36 @@
 class HttpServer final
 {
 public:
-	enum class RequestType
-	{
-		Get,
-		Post,
+    enum class RequestType
+    {
+        Get,
+        Post,
 
-		Count
-	};
+        Count
+    };
 
 public:
-	HttpServer(const std::string& config, const std::string& contentPackage);
-	bool start();
-	void stop();
+    HttpServer(const std::string& config, const std::string& contentPackage);
+    bool start();
+    void stop();
 
 private:
-	void allocateBuffer();
+    void allocateBuffer();
 
-	template <RequestType T>
-	std::string createResponse(TcpSocket& socket, const std::string& request) const;
+    template <RequestType T>
+    std::string createResponse(TcpSocket& socket,
+                               const std::string& request) const;
 
-	void handleNewConnection(TcpSocket& socket);
-	void handleRequest(TcpSocket& socket, const std::string& request) const;
+    void handleNewConnection(TcpSocket& socket);
+    void handleRequest(TcpSocket& socket, const std::string& request) const;
 
 private:
-	ResourceManager m_res;
-	TcpSocket m_listeningSocket;
+    ResourceManager m_res;
+    TcpSocket m_listeningSocket;
 
-	char* m_buffer = nullptr;
+    char* m_buffer = nullptr;
 
-	size_t m_bufferLength;
-	size_t m_offset = 0;
-	bool m_isActive = false;
+    size_t m_bufferLength;
+    size_t m_offset = 0;
+    bool m_isActive = false;
 };
