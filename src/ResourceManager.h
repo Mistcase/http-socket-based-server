@@ -15,8 +15,8 @@ public:
 
 	void setRoot(const std::string& root);
 
-	std::string getFileContent(const char* file);
-	std::string getFileContent(const std::string& file);
+	std::string getFileContent(const char* file) const;
+	std::string getFileContent(const std::string& file) const;
 
 private:
 	static std::string m_basePath;

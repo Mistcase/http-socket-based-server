@@ -13,7 +13,7 @@ public:
 	bool listen() const;
 	TcpSocket accept() const;
 	long send(const void* data, size_t length) const;
-	void receive() const;
+	long receive(void* data, size_t length) const;
 
 	void shutdown();
 	void close();

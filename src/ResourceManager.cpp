@@ -25,7 +25,7 @@ void ResourceManager::setRoot(const std::string& root)
 	m_root = m_basePath + root + "/";
 }
 
-std::string ResourceManager::getFileContent(const char* file)
+std::string ResourceManager::getFileContent(const char* file) const
 {
 	std::ifstream stream(m_root + file);
 	assert(stream.is_open());
@@ -43,7 +43,7 @@ std::string ResourceManager::getFileContent(const char* file)
 	return buffer;
 }
 
-std::string ResourceManager::getFileContent(const std::string& file)
+std::string ResourceManager::getFileContent(const std::string& file) const
 {
 	return getFileContent(file.c_str());
 }

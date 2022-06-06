@@ -59,9 +59,9 @@ long TcpSocket::send(const void* data, size_t length) const
 	return ::send(m_socket, data, length, 0);
 }
 
-void TcpSocket::receive() const
+long TcpSocket::receive(void* data, size_t length) const
 {
-	assert(!"Receive is not supported yet");
+	return ::recv(m_socket, data, length, 0);
 }
 
 TcpSocket& TcpSocket::operator=(TcpSocket&& other)

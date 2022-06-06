@@ -6,7 +6,12 @@
 
 #include <iostream>
 
-HttpServer::HttpServer(const std::string& config, const std::string contentPackage)
+namespace
+{
+	const std::string EndOfHttpRequest = "\r\n\r\n";
+}
+
+HttpServer::HttpServer(const std::string& config, const std::string& contentPackage)
 {
 	// Read config
 	const auto configData = m_res.getFileContent(config);
@@ -25,6 +30,9 @@ HttpServer::HttpServer(const std::string& config, const std::string contentPacka
 		assert(!"Cannot bind socket");
 	}
 
+	m_bufferLength = json["request_buffer_size"].get<size_t>();
+	allocateBuffer(m_bufferLength);
+
 	m_res.setRoot(contentPackage);
 }
 
@@ -41,7 +49,7 @@ bool HttpServer::start()
 	while (m_isActive)
 	{
 		auto socket = m_listeningSocket.accept();
-		handleRequest(socket);
+		handleNewConnection(socket);
 	}
 
 	return true;
@@ -53,10 +61,57 @@ void HttpServer::stop()
 	m_listeningSocket.close();
 }
 
-void HttpServer::handleRequest(TcpSocket& socket)
+void HttpServer::allocateBuffer(size_t length)
+{
+	if (m_buffer != nullptr)
+	{
+		delete m_buffer;
+	}
+
+	assert(length > 0);
+	m_buffer = new char[length]{};
+}
+
+void HttpServer::handleNewConnection(TcpSocket& socket)
 {
 	// Identify requested source
+	while (true) // !!!!!
+	{
+		const auto received = socket.receive(m_buffer + m_offset, m_bufferLength);
+		if (received == -1)
+		{
+			socket.shutdown();
+		}
 
+		m_offset += received;
+		std::string_view bufferView{ m_buffer };
+
+		const auto requestLength = bufferView.find(EndOfHttpRequest);
+		if (requestLength != std::string::npos)
+		{
+			// Handle requestLength == 0
+			assert(requestLength > 0);
+
+			const std::string request(bufferView.substr(0, requestLength));
+			const auto endPatternLength = EndOfHttpRequest.length();
+			const auto totalRequestLength = requestLength + endPatternLength;
+
+			handleRequest(socket, request);
+
+			auto middle = m_buffer + totalRequestLength;
+			auto end = m_buffer + m_bufferLength;
+			std::rotate(m_buffer, middle, end);
+			std::fill(middle, end, 0);
+
+			m_offset = 0;
+			break;
+		}
+	}
+}
+
+void HttpServer::handleRequest(TcpSocket& socket, const std::string& request) const
+{
+	std::cout << request << std::endl << std::endl;
 
 	const std::string response_body = m_res.getFileContent("index.html");
 
