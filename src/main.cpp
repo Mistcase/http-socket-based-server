@@ -3,10 +3,10 @@
 
 int main(int argc, char** argv)
 {
-	ResourceManager::InitializeEnvironment(argv[0]);
+    ResourceManager::InitializeEnvironment(argv[0]);
 
-	HttpServer httpServer("config.json", "Content");
-	httpServer.start();
+    HttpServer httpServer("config.json", "Content");
+    httpServer.start();
 
-	return 0;
+    return 0;
 }
