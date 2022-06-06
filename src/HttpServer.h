@@ -25,10 +25,10 @@ private:
 
     template <RequestType T>
     std::string createResponse(TcpSocket& socket,
-                               const std::string& request) const;
+                               const std::string_view& request) const;
 
     void handleNewConnection(TcpSocket& socket);
-    void handleRequest(TcpSocket& socket, const std::string& request) const;
+    void handleRequest(TcpSocket& socket, const std::string_view& request) const;
 
 private:
     ResourceManager m_res;
