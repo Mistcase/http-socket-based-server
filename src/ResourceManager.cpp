@@ -13,7 +13,6 @@ namespace
     };
 
     const char* TextExtensions[] = { ".html", ".css", ".js" };
-
     const char* BinaryExtensions[] = { ".png" };
 
     ResourceType GetResourceType(const std::string& resource)
@@ -37,6 +36,12 @@ namespace
         return ResourceType::Count;
     }
 
+#if defined(_MSC_VER)
+	const char Delimiter = '\\';
+#else
+	const char Delimiter = '/';
+#endif
+
 } // namespace
 
 std::string ResourceManager::m_basePath;
@@ -46,8 +51,7 @@ void ResourceManager::InitializeEnvironment(const std::string& executablePath)
     const auto index = executablePath.find_last_of("/\\");
     assert(index != std::string::npos);
 
-    // Windows?
-    m_basePath = executablePath.substr(0, index) + "/res/";
+    m_basePath = executablePath.substr(0, index) + Delimiter + "res" + Delimiter;
     assert(m_basePath.empty() == false);
 }
 
@@ -59,7 +63,7 @@ ResourceManager::ResourceManager(const std::string& root)
 void ResourceManager::setRoot(const std::string& root)
 {
     assert(m_basePath.empty() == false);
-    m_root = m_basePath + root + "/";
+    m_root = m_basePath + root + Delimiter;
 }
 
 std::string ResourceManager::getFileContent(const char* file) const
