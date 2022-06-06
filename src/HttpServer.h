@@ -3,10 +3,18 @@
 #include "ResourceManager.h"
 #include "TcpSocket.h"
 #include <cstdint>
-#include <string>
 
 class HttpServer final
 {
+public:
+	enum class RequestType
+	{
+		Get,
+		Post,
+
+		Count
+	};
+
 public:
 	HttpServer(const std::string& config, const std::string& contentPackage);
 	bool start();
@@ -14,6 +22,9 @@ public:
 
 private:
 	void allocateBuffer(size_t length);
+
+	template <RequestType T>
+	std::string createResponse(TcpSocket& socket, const std::string& request) const;
 
 	void handleNewConnection(TcpSocket& socket);
 	void handleRequest(TcpSocket& socket, const std::string& request) const;

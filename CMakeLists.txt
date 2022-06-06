@@ -20,7 +20,8 @@ add_executable(${EXECUTABLE_NAME}
     src/HttpServer.h
     src/HttpServer.cpp
     src/TcpSocket.h
-    src/TcpSocket.cpp)
+    src/TcpSocket.cpp
+    src/Helpers.h)
 
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/)
 

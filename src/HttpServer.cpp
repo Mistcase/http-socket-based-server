@@ -1,6 +1,7 @@
 #include "HttpServer.h"
 
 #include "ResourceManager.h"
+#include "Helpers.h"
 #include <nlohmann/json.hpp>
 #include <sstream>
 
@@ -9,6 +10,26 @@
 namespace
 {
 	const std::string EndOfHttpRequest = "\r\n\r\n";
+
+	const std::string RequestTypeMappings[] = {
+		"GET",
+		"POST"
+	};
+
+	HttpServer::RequestType GetRequestType(const std::string& request)
+	{
+		for (size_t i = 0; i < static_cast<size_t>(HttpServer::RequestType::Count); i++)
+		{
+			if (request.find(RequestTypeMappings[i]) != std::string::npos)
+			{
+				return static_cast<HttpServer::RequestType>(i);
+			}
+		}
+
+		return HttpServer::RequestType::Count;
+	}
+
+	static_assert(helpers::GetArraySize(RequestTypeMappings) == static_cast<size_t>(HttpServer::RequestType::Count));
 }
 
 HttpServer::HttpServer(const std::string& config, const std::string& contentPackage)
@@ -72,9 +93,32 @@ void HttpServer::allocateBuffer(size_t length)
 	m_buffer = new char[length]{};
 }
 
+template <>
+std::string HttpServer::createResponse<HttpServer::RequestType::Get>(TcpSocket& socket, const std::string& request) const
+{
+	// Find resource
+
+	const std::string response_body = m_res.getFileContent("index.html");
+	std::stringstream response;
+	response << "HTTP/1.1 200 OK\r\n"
+			 << "Version: HTTP/1.1\r\n"
+			 << "Content-Type: text/html; charset=utf-8\r\n"
+			 << "Content-Length: " << response_body.length()
+			 << "\r\n\r\n"
+			 << response_body;
+
+	return response.str();
+}
+
+template <>
+std::string HttpServer::createResponse<HttpServer::RequestType::Post>(TcpSocket& socket, const std::string& request) const
+{
+	assert(!"Post request is not supported");
+}
+
 void HttpServer::handleNewConnection(TcpSocket& socket)
 {
-	// Identify requested source
+	// Identify requested resource
 	while (true) // !!!!!
 	{
 		const auto received = socket.receive(m_buffer + m_offset, m_bufferLength);
@@ -113,19 +157,28 @@ void HttpServer::handleRequest(TcpSocket& socket, const std::string& request) co
 {
 	std::cout << request << std::endl << std::endl;
 
-	const std::string response_body = m_res.getFileContent("index.html");
+	// Identify request type
+	const auto requestType = GetRequestType(request); // Maybe it is enough to pass the first word
+	assert(requestType != RequestType::Count);
 
-	std::stringstream response;
-	response << "HTTP/1.1 200 OK\r\n"
-			 << "Version: HTTP/1.1\r\n"
-			 << "Content-Type: text/html; charset=utf-8\r\n"
-			 << "Content-Length: " << response_body.length()
-			 << "\r\n\r\n"
-			 << response_body;
+	std::string response;
+	switch (requestType)
+	{
+	case RequestType::Get:
+		response = createResponse<RequestType::Get>(socket, request);
+		break;
 
-	const auto strResponse = response.str();
-	const auto responseLength = strResponse.length();
+	case RequestType::Post:
+		response = createResponse<RequestType::Post>(socket, request);
+		break;
 
-	socket.send(strResponse.c_str(), responseLength);
+	default:
+		assert(!"Unsupported request type");
+		break;
+	}
+
+	assert(response.empty() == false);
+
+	socket.send(response.c_str(), response.length());
 	socket.shutdown();
 }
