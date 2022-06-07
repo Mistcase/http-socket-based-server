@@ -12,7 +12,7 @@ add_subdirectory(json)
 include_directories(${PROJECT_SOURCE_DIR}/json/single_include)
 message(${PROJECT_SOURCE_DIR}/json/single_include)
 
-set(EXECUTABLE_NAME exec)
+set(EXECUTABLE_NAME Server)
 add_executable(${EXECUTABLE_NAME}
     src/main.cpp
     src/ResourceManager.h

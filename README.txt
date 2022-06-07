@@ -3,9 +3,8 @@ Build (Release mode):
     2. mkdir build && cd build && cmake ../ && cmake --build . --config Release && cd ..
 
 Usage:
-    1. cd build/bin/
-    2. Run executable ("./Server" or "Server.exe" in dependent of platform)
-    3. Open browser and type "localhost:8080"
+    1. Run executable ("./build/bin/Server" or "build/bin/Server.exe" in dependent of platform)
+    2. Open browser and type "localhost:8080"
 
 Server is configurable by config file located in "res/config.json".
 
