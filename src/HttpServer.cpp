@@ -89,7 +89,7 @@ HttpServer::HttpServer(const std::string& config, const std::string& contentPack
 
 HttpServer::~HttpServer()
 {
-	freeBuffer();
+    freeBuffer();
 }
 
 bool HttpServer::start()
@@ -129,12 +129,12 @@ void HttpServer::allocateBuffer()
 
 void HttpServer::freeBuffer()
 {
-	if (m_buffer != nullptr)
-	{
-		delete[] m_buffer;
-	}
+    if (m_buffer != nullptr)
+    {
+        delete[] m_buffer;
+    }
 
-	m_buffer = nullptr;
+    m_buffer = nullptr;
 }
 
 template <>
@@ -203,12 +203,12 @@ void HttpServer::handleNewConnection(TcpSocket& socket)
         if (requestLength != std::string::npos)
         {
             assert(requestLength > 0);
-			if (requestLength == 0)
-			{
-				socket.shutdown();
-				socket.close();
-				return;
-			}
+            if (requestLength == 0)
+            {
+                socket.shutdown();
+                socket.close();
+                return;
+            }
 
             const auto request(bufferView.substr(0, requestLength));
             const auto endPatternLength = EndOfHttpRequest.length();
@@ -251,7 +251,7 @@ void HttpServer::handleRequest(TcpSocket& socket, const std::string_view& reques
     if (response.empty())
     {
         socket.shutdown();
-		socket.close();
+        socket.close();
         return;
     }
 

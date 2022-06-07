@@ -17,14 +17,14 @@ public:
 
 public:
     HttpServer(const std::string& config, const std::string& contentPackage);
-	~HttpServer();
+    ~HttpServer();
 
     bool start();
     void stop();
 
 private:
     void allocateBuffer();
-	void freeBuffer();
+    void freeBuffer();
 
     template <RequestType T>
     std::string createResponse(TcpSocket& socket,
