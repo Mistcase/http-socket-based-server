@@ -87,6 +87,11 @@ HttpServer::HttpServer(const std::string& config, const std::string& contentPack
     m_res.setRoot(contentPackage);
 }
 
+HttpServer::~HttpServer()
+{
+	freeBuffer();
+}
+
 bool HttpServer::start()
 {
     if (m_listeningSocket.listen() == false)
@@ -120,6 +125,16 @@ void HttpServer::allocateBuffer()
 
     assert(m_bufferLength > 0);
     m_buffer = new char[m_bufferLength]{};
+}
+
+void HttpServer::freeBuffer()
+{
+	if (m_buffer != nullptr)
+	{
+		delete[] m_buffer;
+	}
+
+	m_buffer = nullptr;
 }
 
 template <>
