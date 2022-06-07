@@ -37,9 +37,9 @@ namespace
     }
 
 #if defined(_MSC_VER)
-	const char Delimiter = '\\';
+    const char Delimiter = '\\';
 #else
-	const char Delimiter = '/';
+    const char Delimiter = '/';
 #endif
 
 } // namespace
