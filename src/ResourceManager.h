@@ -1,12 +1,13 @@
 #pragma once
 
+#include <filesystem>
 #include <string>
 
 class ResourceManager final
 {
 public:
-    static void InitializeEnvironment(const std::string& executablePath);
-    ResourceManager(const std::string& root = "");
+    static void InitializeEnvironment(const std::filesystem::path& executablePath);
+    ResourceManager();
 
     ResourceManager(const ResourceManager&) = delete;
     ResourceManager(const ResourceManager&&) = delete;
@@ -25,6 +26,6 @@ private:
     size_t getFileSize(std::ifstream& stream) const;
 
 private:
-    static std::string m_basePath;
-    std::string m_root;
+    static std::filesystem::path m_basePath;
+    std::filesystem::path m_root;
 };

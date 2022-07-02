@@ -38,7 +38,8 @@ bool TcpSocket::bind(const std::string& address, uint16_t port)
     m_addr.sin_port = htons(port);
 
     return ::bind(m_socket, reinterpret_cast<const sockaddr*>(&m_addr),
-                  sizeof(m_addr)) == 0;
+                  sizeof(m_addr))
+        == 0;
 }
 
 bool TcpSocket::listen() const
