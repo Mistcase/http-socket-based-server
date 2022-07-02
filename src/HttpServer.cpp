@@ -33,29 +33,19 @@ namespace
     {
         const char* DefaultPage = "/";
 
-        std::string GetContentType(const std::string& resource)
+        std::string GetContentType(const std::filesystem::path& resource)
         {
-            if (resource.find(".html") != std::string::npos)
-            {
-                return "text/html";
-            }
+            static const std::unordered_map<std::string, std::string> ContentTypeMappings = {
+                { ".html", "text/html" },
+                { ".css", "text/css" },
+                { ".js", "text/javascript" },
+                { ".png", "image/png" },
+            };
 
-            if (resource.find(".css") != std::string::npos)
-            {
-                return "text/css";
-            }
-
-            if (resource.find(".js") != std::string::npos)
-            {
-                return "text/javascript";
-            }
-
-            if (resource.find(".png") != std::string::npos)
-            {
-                return "image/png";
-            }
-
-            return "";
+            const auto iterator = ContentTypeMappings.find(resource.extension());
+            return iterator != ContentTypeMappings.cend()
+                ? iterator->second
+                : "";
         }
 
     } // namespace resources
@@ -137,9 +127,10 @@ void HttpServer::freeBuffer()
     m_buffer = nullptr;
 }
 
-template <>
-std::string HttpServer::createResponse<HttpServer::RequestType::Get>(TcpSocket& socket, const std::string_view& request) const
+std::string HttpServer::createResponse(TcpSocket& socket, const std::string_view& request) const
 {
+    // Only Get requests are supported for now
+
     const auto& mapping = RequestTypeMappings[static_cast<size_t>(RequestType::Get)];
     assert(request.find(mapping) == 0);
 
@@ -178,12 +169,6 @@ std::string HttpServer::createResponse<HttpServer::RequestType::Get>(TcpSocket& 
              << response_body;
 
     return response.str();
-}
-
-template <>
-std::string HttpServer::createResponse<HttpServer::RequestType::Post>(TcpSocket& socket, const std::string_view& request) const
-{
-    assert(!"Post request is not supported");
 }
 
 void HttpServer::handleNewConnection(TcpSocket& socket)
@@ -232,22 +217,7 @@ void HttpServer::handleRequest(TcpSocket& socket, const std::string_view& reques
     const auto requestType = GetRequestType(request);
     assert(requestType != RequestType::Count);
 
-    std::string response;
-    switch (requestType)
-    {
-    case RequestType::Get:
-        response = createResponse<RequestType::Get>(socket, request);
-        break;
-
-    case RequestType::Post:
-        response = createResponse<RequestType::Post>(socket, request);
-        break;
-
-    default:
-        assert(!"Unsupported request type");
-        break;
-    }
-
+    std::string response = createResponse(socket, request);
     if (response.empty())
     {
         socket.shutdown();

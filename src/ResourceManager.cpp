@@ -12,14 +12,15 @@ namespace
         Count
     };
 
-    const char* TextExtensions[] = { ".html", ".css", ".js" };
+    const char* TextExtensions[] = { ".html", ".css", ".js", ".json" };
     const char* BinaryExtensions[] = { ".png" };
 
-    ResourceType GetResourceType(const std::string& resource)
+    ResourceType GetResourceType(const std::filesystem::path& resource)
     {
+        const auto resExtension = resource.extension();
         for (const auto extension : TextExtensions)
         {
-            if (resource.find(extension) != std::string::npos)
+            if (resExtension == extension)
             {
                 return ResourceType::Text;
             }
@@ -27,7 +28,7 @@ namespace
 
         for (const auto extension : BinaryExtensions)
         {
-            if (resource.find(extension) != std::string::npos)
+            if (resExtension == extension)
             {
                 return ResourceType::Binary;
             }
@@ -36,34 +37,24 @@ namespace
         return ResourceType::Count;
     }
 
-#if defined(_MSC_VER)
-    const char Delimiter = '\\';
-#else
-    const char Delimiter = '/';
-#endif
-
 } // namespace
 
-std::string ResourceManager::m_basePath;
+std::filesystem::path ResourceManager::m_basePath;
 
-void ResourceManager::InitializeEnvironment(const std::string& executablePath)
+void ResourceManager::InitializeEnvironment(const std::filesystem::path& executablePath)
 {
-    const auto index = executablePath.find_last_of("/\\");
-    assert(index != std::string::npos);
-
-    m_basePath = executablePath.substr(0, index) + Delimiter + "res" + Delimiter;
-    assert(m_basePath.empty() == false);
+    m_basePath = executablePath.parent_path() / (std::string("res") + std::filesystem::path::preferred_separator);
 }
 
-ResourceManager::ResourceManager(const std::string& root)
+ResourceManager::ResourceManager()
+    : m_root(m_basePath)
 {
-    setRoot(root);
 }
 
 void ResourceManager::setRoot(const std::string& root)
 {
     assert(m_basePath.empty() == false);
-    m_root = m_basePath + root + Delimiter;
+    m_root.append(root + std::filesystem::path::preferred_separator);
 }
 
 std::string ResourceManager::getFileContent(const char* file) const
@@ -93,7 +84,7 @@ std::string ResourceManager::getFileContent(const std::string& file) const
 
 std::string ResourceManager::getTextResource(const char* file) const
 {
-    std::ifstream stream(m_root + file);
+    std::ifstream stream(m_root.string() + file);
     if (stream.is_open() == false)
     {
         return "";
@@ -113,7 +104,7 @@ std::string ResourceManager::getTextResource(const char* file) const
 
 std::string ResourceManager::getBinaryResource(const char* file) const
 {
-    std::ifstream stream(m_root + file,
+    std::ifstream stream(m_root.string() + file,
                          std::ifstream::binary | std::ifstream::in);
 
     const auto fileSize = getFileSize(stream);

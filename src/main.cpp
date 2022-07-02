@@ -1,5 +1,6 @@
 #include "HttpServer.h"
 #include "ResourceManager.h"
+#include <filesystem>
 
 int main(int argc, char** argv)
 {

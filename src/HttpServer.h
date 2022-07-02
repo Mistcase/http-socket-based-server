@@ -26,7 +26,6 @@ private:
     void allocateBuffer();
     void freeBuffer();
 
-    template <RequestType T>
     std::string createResponse(TcpSocket& socket,
                                const std::string_view& request) const;
 
